@@ -1,21 +1,22 @@
-package tests
+package tui
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/tinywasm/ddlc"
 	"github.com/tinywasm/fmt"
 )
 
 const (
 	msgExporting     = "Exporting DDL schema..."
-	msgExportSuccess = "Export successful. Length: "
+	msgExportSuccess = "Export successful. Written to: "
 	msgExportFailed  = "Export failed: "
 )
 
-func TestHandler_WithoutExportFunc(t *testing.T) {
-	h := ddlc.New()
+func collectLogs(t *testing.T, h *Handler) *[]string {
+	t.Helper()
 	var logs []string
 	h.SetLog(func(messages ...any) {
 		var strMsgs []string
@@ -24,6 +25,12 @@ func TestHandler_WithoutExportFunc(t *testing.T) {
 		}
 		logs = append(logs, strings.Join(strMsgs, " "))
 	})
+	return &logs
+}
+
+func TestHandler_WithoutExportFunc(t *testing.T) {
+	h := New()
+	logs := collectLogs(t, h)
 
 	err := h.ExecuteErr()
 	if err == nil {
@@ -35,70 +42,69 @@ func TestHandler_WithoutExportFunc(t *testing.T) {
 		t.Errorf("expected error %q, got %q", expectedErr, err.Error())
 	}
 
-	// Verify the log contains the error message prefix and contents
 	found := false
-	for _, log := range logs {
+	for _, log := range *logs {
 		if strings.Contains(log, expectedErr) {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected error message in logs, logs were: %v", logs)
+		t.Errorf("expected error message in logs, logs were: %v", *logs)
 	}
 }
 
-func TestHandler_WithExportFunc_Success(t *testing.T) {
-	h := ddlc.New()
-	var logs []string
-	h.SetLog(func(messages ...any) {
-		var strMsgs []string
-		for _, m := range messages {
-			strMsgs = append(strMsgs, fmt.Sprint(m))
-		}
-		logs = append(logs, strings.Join(strMsgs, " "))
-	})
+func TestHandler_WithExportFunc_Success_WritesFile(t *testing.T) {
+	h := New()
+	logs := collectLogs(t, h)
+
+	outputPath := filepath.Join(t.TempDir(), "nested", "db.sql")
+	h.SetOutputPath(outputPath)
 
 	expectedSQL := "CREATE TABLE users (id INTEGER PRIMARY KEY);"
 	h.SetExport(func() (string, error) {
 		return expectedSQL, nil
 	})
 
-	err := h.ExecuteErr()
-	if err != nil {
+	if err := h.ExecuteErr(); err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	// Verify execution triggered the export func and logged success
-	foundOpen := false
-	foundClose := false
-	for _, log := range logs {
+	written, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("expected output file to exist: %v", err)
+	}
+	if string(written) != expectedSQL {
+		t.Errorf("expected written SQL %q, got %q", expectedSQL, string(written))
+	}
+
+	foundOpen, foundClose := false, false
+	for _, log := range *logs {
 		if strings.Contains(log, msgExporting) {
 			foundOpen = true
 		}
-		if strings.Contains(log, msgExportSuccess) && strings.Contains(log, fmt.Sprint(len(expectedSQL))) {
+		if strings.Contains(log, msgExportSuccess) && strings.Contains(log, outputPath) {
 			foundClose = true
 		}
 	}
-
 	if !foundOpen {
 		t.Error("expected LogOpen message in logs")
 	}
 	if !foundClose {
-		t.Errorf("expected LogClose success message with length in logs, logs were: %v", logs)
+		t.Errorf("expected LogClose success message with output path in logs, logs were: %v", *logs)
+	}
+}
+
+func TestHandler_DefaultOutputPath(t *testing.T) {
+	h := New()
+	if h.outputPath != DefaultOutputPath {
+		t.Errorf("expected default output path %q, got %q", DefaultOutputPath, h.outputPath)
 	}
 }
 
 func TestHandler_WithExportFunc_Error(t *testing.T) {
-	h := ddlc.New()
-	var logs []string
-	h.SetLog(func(messages ...any) {
-		var strMsgs []string
-		for _, m := range messages {
-			strMsgs = append(strMsgs, fmt.Sprint(m))
-		}
-		logs = append(logs, strings.Join(strMsgs, " "))
-	})
+	h := New()
+	logs := collectLogs(t, h)
 
 	expectedErr := fmt.Err("database connection lost")
 	h.SetExport(func() (string, error) {
@@ -113,26 +119,25 @@ func TestHandler_WithExportFunc_Error(t *testing.T) {
 		t.Errorf("expected propagated error to be verbatim %v, got %v", expectedErr, err)
 	}
 
-	// Verify error log message
 	foundErr := false
-	for _, log := range logs {
+	for _, log := range *logs {
 		if strings.Contains(log, msgExportFailed) && strings.Contains(log, expectedErr.Error()) {
 			foundErr = true
 		}
 	}
 	if !foundErr {
-		t.Errorf("expected error message in logs, logs were: %v", logs)
+		t.Errorf("expected error message in logs, logs were: %v", *logs)
 	}
 }
 
 func TestHandler_Execute_Structural(t *testing.T) {
-	h := ddlc.New()
+	h := New()
+	h.SetOutputPath(filepath.Join(t.TempDir(), "db.sql"))
 	called := false
 	h.SetExport(func() (string, error) {
 		called = true
 		return "", nil
 	})
-	// Should run without panic or returning error
 	h.Execute()
 	if !called {
 		t.Error("expected export function to be called by Execute()")

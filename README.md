@@ -28,3 +28,13 @@ To guarantee portability and allow compilation in frontend or WASM environments,
 - `github.com/tinywasm/fmt`
 
 It does **not** import `tinywasm/orm` or any database adapters.
+
+## `tui` Subpackage (dev console only)
+
+`tui/handler.go` provides a `devtui.HandlerExecution`-compatible `Handler`
+(`Name`, `Label`, `SetLog`, `Execute`) that runs an injected `ExportFunc` and
+writes the resulting DDL to a file (`config/db.sql` by default, override with
+`SetOutputPath`). It lives in its own package, separate from the root
+contract, so that `sqlt`/`postgres`/`ormc`/`ormcp` — which only need the
+leaf contract — never compile file-I/O or dev-console code. Only
+`tinywasm/app` should import `github.com/tinywasm/ddlc/tui`.
