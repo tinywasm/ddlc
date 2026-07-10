@@ -5,6 +5,6 @@ go 1.25.2
 // Leaf guarantee: github.com/tinywasm/ddlc must remain a leaf package in the SQL ecosystem.
 // It must depend ONLY on tinywasm/model and tinywasm/fmt to keep it portable for WASM/frontend.
 require (
-	github.com/tinywasm/fmt v0.25.1
+	github.com/tinywasm/fmt v0.25.2
 	github.com/tinywasm/model v0.0.8
 )
