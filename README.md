@@ -20,7 +20,6 @@ To keep the runtime environment lightweight and free of unnecessary dependencies
 ### Callers of `Exporter`
 - **`tinywasm/ormc`:** The ORM code generator (via `ExportSQL`).
 - **`tinywasm/ormcp`:** The MCP db tool (via `db_export_schema`).
-- **`cmd/ddlc`:** The CLI utility to export schema files without requiring an active database connection.
 
 ## Leaf-Dependency Guarantee
 

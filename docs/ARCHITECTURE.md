@@ -20,7 +20,6 @@ flowchart TD
     subgraph Tooling [Compile & Development Time]
         ormc[tinywasm/ormc <br> Code Generator]
         ormcp[tinywasm/ormcp <br> MCP Tooling]
-        cli[cmd/ddlc <br> CLI Utility]
     end
 
     subgraph Adapters [SQL Dialect Adapters]
@@ -39,11 +38,6 @@ flowchart TD
     postgres --> ddlc
     ormc --> ddlc
     ormcp --> ddlc
-    
-    cli --> ormc
-    cli --> sqlt
-    cli --> postgres
-    cli --> ddlc
 
     ddlc --> model
     ddlc --> fmt
