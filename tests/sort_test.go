@@ -1,32 +1,32 @@
-package ddlc
-
-import "github.com/tinywasm/model"
+package tests
 
 import (
 	"testing"
 
+	"github.com/tinywasm/ddlc"
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/model"
 )
 
 type mockModel struct {
 	name string
-	exts []FieldExt
+	exts []ddlc.FieldExt
 }
 
-func (m *mockModel) ModelName() string         { return m.name }
-func (m *mockModel) Schema() []model.Field       { return nil }
-func (m *mockModel) Pointers() []any           { return nil }
-func (m *mockModel) IsNil() bool               { return m == nil }
-func (m *mockModel) EncodeFields(model.FieldWriter) {}
-func (m *mockModel) DecodeFields(model.FieldReader) {}
-func (m *mockModel) SchemaExt() []FieldExt { return m.exts }
+func (m *mockModel) ModelName() string               { return m.name }
+func (m *mockModel) Schema() []model.Field           { return nil }
+func (m *mockModel) Pointers() []any                 { return nil }
+func (m *mockModel) IsNil() bool                     { return m == nil }
+func (m *mockModel) EncodeFields(model.FieldWriter)  {}
+func (m *mockModel) DecodeFields(model.FieldReader)  {}
+func (m *mockModel) SchemaExt() []ddlc.FieldExt      { return m.exts }
 
 func TestTopologicalSort_NoDeps(t *testing.T) {
 	users := &mockModel{name: "users"}
 	roles := &mockModel{name: "roles"}
 	models := []model.Model{users, roles}
 
-	sorted, err := TopologicalSort(models)
+	sorted, err := ddlc.TopologicalSort(models)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,13 +39,13 @@ func TestTopologicalSort_WithFK(t *testing.T) {
 	users := &mockModel{name: "users"}
 	sessions := &mockModel{
 		name: "sessions",
-		exts: []FieldExt{
+		exts: []ddlc.FieldExt{
 			{Ref: "users"},
 		},
 	}
 	models := []model.Model{sessions, users}
 
-	sorted, err := TopologicalSort(models)
+	sorted, err := ddlc.TopologicalSort(models)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,15 +68,15 @@ func TestTopologicalSort_WithFK(t *testing.T) {
 func TestTopologicalSort_Cycle(t *testing.T) {
 	a := &mockModel{
 		name: "a",
-		exts: []FieldExt{{Ref: "b"}},
+		exts: []ddlc.FieldExt{{Ref: "b"}},
 	}
 	b := &mockModel{
 		name: "b",
-		exts: []FieldExt{{Ref: "a"}},
+		exts: []ddlc.FieldExt{{Ref: "a"}},
 	}
 	models := []model.Model{a, b}
 
-	_, err := TopologicalSort(models)
+	_, err := ddlc.TopologicalSort(models)
 	if err == nil {
 		t.Fatal("expected error on circular dependency")
 	}
@@ -89,18 +89,18 @@ type basicModel struct {
 	name string
 }
 
-func (m *basicModel) ModelName() string         { return m.name }
-func (m *basicModel) Schema() []model.Field       { return nil }
-func (m *basicModel) Pointers() []any           { return nil }
-func (m *basicModel) IsNil() bool               { return m == nil }
-func (m *basicModel) EncodeFields(model.FieldWriter) {}
-func (m *basicModel) DecodeFields(model.FieldReader) {}
+func (m *basicModel) ModelName() string               { return m.name }
+func (m *basicModel) Schema() []model.Field           { return nil }
+func (m *basicModel) Pointers() []any                 { return nil }
+func (m *basicModel) IsNil() bool                     { return m == nil }
+func (m *basicModel) EncodeFields(model.FieldWriter)  {}
+func (m *basicModel) DecodeFields(model.FieldReader)  {}
 
 func TestTopologicalSort_NoSchemaExt(t *testing.T) {
 	m := &basicModel{name: "m"}
 	models := []model.Model{m}
 
-	sorted, err := TopologicalSort(models)
+	sorted, err := ddlc.TopologicalSort(models)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,6 +8,8 @@ github.com/tinywasm/modfind v0.0.4 h1:g7EFZArEftll9pxg5VAToIltVnEMRWfE+KEjPJpsNg
 github.com/tinywasm/modfind v0.0.4/go.mod h1:g1ZkkxCZ7vwDI5O23AMWlPJy4ctRWfWKZX/y+KMH1FM=
 github.com/tinywasm/orm v0.9.26 h1:PtB+KBwrSONljYtvPdiuHxSNu1tkuCzBSlvNhBEtbm0=
 github.com/tinywasm/orm v0.9.26/go.mod h1:3Iryaj3wHEVc15nvWLYD+f2rANYgOFx/85Gu797BGAY=
+github.com/tinywasm/orm v0.9.27 h1:IJVh7BzbqabSUmHC/VbLHscdSA6I23DsTTygwYIg2DY=
+github.com/tinywasm/orm v0.9.27/go.mod h1:oyZEPhmfemnkn8dVkL8iAhTpy/2z7q//lObU1+qTc0s=
 github.com/tinywasm/postgres v0.3.4 h1:ZIIiD08b0bVEPnrsSKa73px8vSmSqKZO/NEmO8SjsLw=
 github.com/tinywasm/postgres v0.3.4/go.mod h1:GN8Az3Ok6wfalqUNU2WfDIeAzVY6HefxN9YbiUVrPAE=
 github.com/tinywasm/sqlt v0.0.6 h1:7nsgShBkKJfXFHVS9qA5ndd1ryfgksJ4PZRgJrmy5QY=
