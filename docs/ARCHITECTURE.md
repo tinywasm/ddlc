@@ -19,7 +19,7 @@ The following diagram illustrates the dependency flow. `ddlc` is a leaf package 
 flowchart TD
     subgraph Tooling [Compile & Development Time]
         ormc[tinywasm/ormc <br> Code Generator]
-        ormcp[tinywasm/ormcp <br> MCP Tooling]
+        sqlmcp[tinywasm/sqlmcp <br> MCP Tooling]
     end
 
     subgraph Adapters [SQL Dialect Adapters]
@@ -37,7 +37,7 @@ flowchart TD
     sqlt --> ddlc
     postgres --> ddlc
     ormc --> ddlc
-    ormcp --> ddlc
+    sqlmcp --> ddlc
 
     ddlc --> model
     ddlc --> fmt

@@ -38,7 +38,7 @@ here so this repo's docs describe the contract correctly):
 |---|---|
 | `tinywasm/sqlt`, `tinywasm/postgres` | import `github.com/tinywasm/orm/ddl` → `github.com/tinywasm/ddlc`; `orm.FieldExt` → `ddlc.FieldExt` |
 | `tinywasm/ormc` (generator) | generated `SchemaExt()` emits `[]ddlc.FieldExt` (its plan, stage 0) |
-| `tinywasm/ormcp` | already imports `ddlc` (done in split) |
+| `tinywasm/sqlmcp` | already imports `ddlc` (done in split) |
 | `tinywasm/app` | consumes ddlc through its own TUI handler (stage 2 below) |
 
 **Ecosystem rules:** no stdlib in WASM-shared code (`tinywasm/fmt`), no
@@ -48,10 +48,10 @@ here so this repo's docs describe the contract correctly):
 
 - `README.md`: replace the gonew stub. Document: what ddlc is (DDL export
   contract + FK topological sort + `FieldExt`), who implements `Exporter`
-  (sqlt/postgres), who calls it (ormc's `ExportSQL`, ormcp's
+  (sqlt/postgres), who calls it (ormc's `ExportSQL`, sqlmcp's
   `db_export_schema`, the `cmd/ddlc` CLI), and the leaf-dependency guarantee.
 - `docs/ARCHITECTURE.md` (create): why the split exists (orm updates no
-  longer force sqlt/postgres/ormcp version bumps), the dependency diagram
+  longer force sqlt/postgres/sqlmcp version bumps), the dependency diagram
   (mermaid): `sqlt/postgres → ddlc ← ormc`, `cmd/ddlc → ormc+sqlt+postgres`
   (separate module), and why `FieldExt` lives here and not in `model`
   (it is DDL/FK metadata, meaningless outside SQL adapters).

@@ -2,7 +2,7 @@
 //
 // This package is intentionally separate from the ddlc root package: the
 // root stays a WASM-safe leaf contract (Exporter, FieldExt, TopologicalSort)
-// consumed by sqlt/postgres/ormc/ormcp, while this package pulls in os/file
+// consumed by sqlt/postgres/ormc/sqlmcp, while this package pulls in os/file
 // I/O and the DevTUI execution contract and is only meant to be imported by
 // tinywasm/app's dev console.
 package tui

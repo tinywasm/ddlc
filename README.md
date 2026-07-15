@@ -19,7 +19,7 @@ To keep the runtime environment lightweight and free of unnecessary dependencies
 
 ### Callers of `Exporter`
 - **`tinywasm/ormc`:** The ORM code generator (via `ExportSQL`).
-- **`tinywasm/ormcp`:** The MCP db tool (via `db_export_schema`).
+- **`tinywasm/sqlmcp`:** The MCP db tool (via `db_export_schema`).
 
 ## Leaf-Dependency Guarantee
 
@@ -35,6 +35,6 @@ It does **not** import `tinywasm/orm` or any database adapters.
 (`Name`, `Label`, `SetLog`, `Execute`) that runs an injected `ExportFunc` and
 writes the resulting DDL to a file (`config/db.sql` by default, override with
 `SetOutputPath`). It lives in its own package, separate from the root
-contract, so that `sqlt`/`postgres`/`ormc`/`ormcp` — which only need the
+contract, so that `sqlt`/`postgres`/`ormc`/`sqlmcp` — which only need the
 leaf contract — never compile file-I/O or dev-console code. Only
 `tinywasm/app` should import `github.com/tinywasm/ddlc/tui`.
