@@ -6,5 +6,5 @@ go 1.25.2
 // It must depend ONLY on tinywasm/model and tinywasm/fmt to keep it portable for WASM/frontend.
 require (
 	github.com/tinywasm/fmt v0.25.3
-	github.com/tinywasm/model v0.0.16
+	github.com/tinywasm/model v0.1.0
 )
