@@ -8,23 +8,26 @@
 package tui
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/tui"
 )
 
 // ExportFunc produces the DDL SQL for the current project.
 type ExportFunc func() (sql string, err error)
 
 // DefaultOutputPath is used when SetOutputPath is never called.
-const DefaultOutputPath = "config/db.sql"
+const DefaultOutputPath = "config/schema.sql"
 
 // Handler implements the TUI HandlerExecution and Loggable interfaces structurally.
 type Handler struct {
 	logFn      func(messages ...any)
 	export     ExportFunc
 	outputPath string
+	rootDir    string
 }
 
 // New creates a new DDLC TUI handler.
@@ -40,9 +43,17 @@ func (h *Handler) Name() string {
 	return "DDLC"
 }
 
-// Label returns the button label for DevTUI.
+// Label returns the button label for DevTUI. Includes both "SQL" and "DDL"
+// (the acronym alone is opaque to devs without a SQL background) and the
+// actual configured output path, so the button doubles as documentation of
+// where the file lands. The path is shortened relative to rootDir (when set)
+// since outputPath is absolute — see SetOutputPath / SetRootDir.
 func (h *Handler) Label() string {
-	return "Export DDL"
+	path := h.outputPath
+	if h.rootDir != "" {
+		path = fmt.PathRelativeTo(path, h.rootDir)
+	}
+	return "Export SQL DDL → " + path
 }
 
 // SetLog injects the logging function.
@@ -68,17 +79,36 @@ func (h *Handler) SetOutputPath(path string) {
 	h.outputPath = path
 }
 
+// SetRootDir tells the handler the project root, used only to shorten
+// outputPath for display in Label() — outputPath itself stays absolute so
+// writeOutput() is correct regardless of the daemon's own working directory
+// (which does not necessarily track the project root it is currently serving).
+func (h *Handler) SetRootDir(path string) {
+	h.rootDir = path
+}
+
 // Log message prefix and message constants to avoid repeating string literals.
+// LogOpen/LogClose come from tinywasm/tui (the shared handler contract) rather
+// than being redeclared here — see tui.LogOpen/tui.LogClose usage below.
 const (
-	LogOpen          = "[..."
-	LogClose         = "...]"
 	MsgPrefix        = "ddlc handler: "
 	MsgExporting     = "Exporting DDL schema..."
 	MsgExportFailed  = "Export failed: "
 	MsgExportSuccess = "Export successful. Written to: "
 	MsgWriteFailed   = "Write failed: "
+	MsgNoModels      = "No models found — define one in a models.go file (see github.com/tinywasm/model). Nothing exported."
 	ErrNotConfigured = "ddlc handler: export function not configured"
 )
+
+// ErrNothingToExport signals an ExportFunc found nothing to write (e.g. no
+// models defined in the project). ExecuteErr shows a friendly message instead
+// of the generic failure one, and — like any non-nil error — never writes a
+// file. Kept decoupled from any specific ExportFunc implementation (e.g.
+// tinywasm/ormc): implementations that aren't ormc-based can return this
+// directly; ormc-based ones go through a translation at their wiring site
+// (see tinywasm/app/section-build.go, which knows about both ormc's
+// ErrNoModelsFound and this sentinel).
+var ErrNothingToExport = fmt.Err("nothing", "to", "export")
 
 // Execute triggers the DDL export. Implements devtui.HandlerExecution structurally.
 func (h *Handler) Execute() {
@@ -94,19 +124,23 @@ func (h *Handler) ExecuteErr() error {
 		return err
 	}
 
-	h.logFn(LogOpen, MsgPrefix+MsgExporting)
+	h.logFn(tui.LogOpen, MsgPrefix+MsgExporting)
 	sql, err := h.export()
+	if errors.Is(err, ErrNothingToExport) {
+		h.logFn(tui.LogClose, MsgPrefix+MsgNoModels)
+		return err
+	}
 	if err != nil {
-		h.logFn(LogClose, MsgPrefix+MsgExportFailed+err.Error())
+		h.logFn(tui.LogClose, MsgPrefix+MsgExportFailed+err.Error())
 		return err
 	}
 
 	if err := h.writeOutput(sql); err != nil {
-		h.logFn(LogClose, MsgPrefix+MsgWriteFailed+err.Error())
+		h.logFn(tui.LogClose, MsgPrefix+MsgWriteFailed+err.Error())
 		return err
 	}
 
-	h.logFn(LogClose, MsgPrefix+MsgExportSuccess+h.outputPath)
+	h.logFn(tui.LogClose, MsgPrefix+MsgExportSuccess+h.outputPath)
 	return nil
 }
 

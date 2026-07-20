@@ -33,7 +33,7 @@ It does **not** import `tinywasm/orm` or any database adapters.
 
 `tui/handler.go` provides a `devtui.HandlerExecution`-compatible `Handler`
 (`Name`, `Label`, `SetLog`, `Execute`) that runs an injected `ExportFunc` and
-writes the resulting DDL to a file (`config/db.sql` by default, override with
+writes the resulting DDL to a file (`config/schema.sql` by default, override with
 `SetOutputPath`). It lives in its own package, separate from the root
 contract, so that `sqlt`/`postgres`/`ormc`/`sqlmcp` — which only need the
 leaf contract — never compile file-I/O or dev-console code. Only
